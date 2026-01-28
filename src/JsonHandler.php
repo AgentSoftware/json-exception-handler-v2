@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace SMartins\Exceptions;
 
+use Illuminate\Http\JsonResponse;
 use SMartins\Exceptions\Handlers\Handler;
 use Throwable;
 
@@ -10,12 +13,8 @@ trait JsonHandler
     /**
      * Handle the json response. Check if exception is treated. If true call
      * the specific handler. If false set the default response to be returned.
-     *
-     * @param  \Throwable  $exception
-     *
-     * @return \Illuminate\Http\JsonResponse
      */
-    public function jsonResponse(Throwable $exception)
+    public function jsonResponse(Throwable $exception): JsonResponse
     {
         $handler = new Handler($exception);
 

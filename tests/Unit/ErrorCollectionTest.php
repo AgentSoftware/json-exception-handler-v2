@@ -1,14 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace SMartins\Exceptions\Tests\Unit;
 
-use SMartins\Exceptions\Tests\TestCase;
-use SMartins\Exceptions\Tests\GettersAndSetters;
+use PHPUnit\Framework\Attributes\Test;
 use SMartins\Exceptions\JsonApi\ErrorCollection;
+use SMartins\Exceptions\Tests\TestCase;
 
 class ErrorCollectionTest extends TestCase
 {
-    public function testSetHeaders()
+    #[Test]
+    public function testSetHeaders(): void
     {
         $error = new ErrorCollection;
         $this->assertInstanceOf(ErrorCollection::class, $error->setHeaders(['foo' => 'bar']));

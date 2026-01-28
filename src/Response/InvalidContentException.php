@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace SMartins\Exceptions\Response;
 
-class InvalidContentException extends \Exception
+use Exception;
+
+class InvalidContentException extends Exception
 {
-    //
 }

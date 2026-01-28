@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace SMartins\Exceptions\Response;
 
 interface ErrorHandledCollectionInterface extends ErrorCollectionInterface
@@ -9,10 +11,9 @@ interface ErrorHandledCollectionInterface extends ErrorCollectionInterface
      * $type parameter. If one item on collection was different of type an
      * exception is thrown.
      *
-     * @param  string $type
-     * @return self
+     * @param  class-string  $type
      *
-     * @throws \SMartins\Exceptions\Response\InvalidContentException
+     * @throws InvalidContentException
      */
     public function validatedContent(string $type): self;
 }

@@ -1,7 +1,9 @@
 preset: laravel
 
+risky: true
+
 finder:
   exclude:
-    - "tests"
+    - tests
   name:
     - "*.php"

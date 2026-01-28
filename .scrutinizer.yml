@@ -18,11 +18,14 @@ checks:
     fix_doc_comments: true
 
 build:
+  environment:
+    php:
+      version: 8.2
   tests:
     override:
       - php-scrutinizer-run
       -
-        command: 'vendor/bin/phpunit --coverage-clover=some-file'
+        command: 'vendor/bin/phpunit --coverage-clover=coverage.xml'
         coverage:
-          file: 'some-file'
+          file: 'coverage.xml'
           format: 'clover'

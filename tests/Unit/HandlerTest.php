@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace SMartins\Exceptions\Tests\Unit;
 
 use Exception;
+use PHPUnit\Framework\Attributes\Test;
+use SMartins\Exceptions\Handlers\Handler;
 use SMartins\Exceptions\JsonApi\Error;
 use SMartins\Exceptions\Tests\TestCase;
-use SMartins\Exceptions\Handlers\Handler;
 
 class HandlerTest extends TestCase
 {
-    public function testHandle()
+    #[Test]
+    public function testHandle(): void
     {
         $exception = new Exception('Test exception', 1);
 

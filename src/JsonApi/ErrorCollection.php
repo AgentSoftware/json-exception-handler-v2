@@ -1,33 +1,34 @@
 <?php
 
+declare(strict_types=1);
+
 namespace SMartins\Exceptions\JsonApi;
 
 use Illuminate\Support\Collection;
 use SMartins\Exceptions\Response\ErrorHandledCollectionInterface;
 use SMartins\Exceptions\Response\InvalidContentException;
 
+/**
+ * @extends Collection<int, Error>
+ */
 class ErrorCollection extends Collection implements ErrorHandledCollectionInterface
 {
     /**
      * The HTTP status code applicable to this problem, expressed as a string value.
-     *
-     * @var string
      */
-    protected $statusCode;
+    protected ?string $statusCode = null;
 
     /**
      * The HTTP headers on response.
      *
-     * @var array
+     * @var array<string, mixed>
      */
-    protected $headers = [];
+    protected array $headers = [];
 
     /**
      * Returns the status code.
-     *
-     * @return string|null
      */
-    public function getStatusCode()
+    public function getStatusCode(): ?string
     {
         return $this->statusCode;
     }
@@ -35,7 +36,7 @@ class ErrorCollection extends Collection implements ErrorHandledCollectionInterf
     /**
      * Returns response headers.
      *
-     * @return array headers
+     * @return array<string, mixed>
      */
     public function getHeaders(): array
     {
@@ -44,12 +45,8 @@ class ErrorCollection extends Collection implements ErrorHandledCollectionInterf
 
     /**
      * Set the status code.
-     *
-     * @param string $statusCode
-     *
-     * @return self
      */
-    public function setStatusCode(string $statusCode)
+    public function setStatusCode(string $statusCode): static
     {
         $this->statusCode = $statusCode;
 
@@ -59,11 +56,9 @@ class ErrorCollection extends Collection implements ErrorHandledCollectionInterf
     /**
      * Set the headers of response.
      *
-     * @param array $headers
-     *
-     * @return self
+     * @param  array<string, mixed>  $headers
      */
-    public function setHeaders(array $headers): self
+    public function setHeaders(array $headers): static
     {
         $this->headers = $headers;
 
@@ -71,7 +66,7 @@ class ErrorCollection extends Collection implements ErrorHandledCollectionInterf
     }
 
     /**
-     * {@inheritdoc}
+     * @throws InvalidContentException
      */
     public function validatedContent(string $type): ErrorHandledCollectionInterface
     {

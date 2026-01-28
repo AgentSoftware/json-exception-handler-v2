@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace SMartins\Exceptions\JsonApi;
 
 use Illuminate\Contracts\Support\Arrayable;
@@ -7,77 +9,59 @@ use SMartins\Exceptions\Response\ErrorHandledCollectionInterface;
 use SMartins\Exceptions\Response\ErrorHandledInterface;
 use SMartins\Exceptions\Traits\NotNullArrayable;
 
+/**
+ * @implements Arrayable<string, mixed>
+ */
 class Error implements Arrayable, ErrorHandledInterface
 {
     use NotNullArrayable;
 
     /**
      * A unique identifier for this particular occurrence of the problem.
-     *
-     * @var string
      */
-    protected $id;
+    protected ?string $id = null;
 
-    /**
-     * @var \SMartins\Exceptions\JsonApi\Links
-     */
-    protected $links;
+    protected ?Links $links = null;
 
     /**
      * The HTTP status code applicable to this problem, expressed as a string value.
-     *
-     * @var string
      */
-    protected $status;
+    protected ?string $status = null;
 
     /**
      * An application-specific error code, expressed as a string value.
-     *
-     * @var string
      */
-    protected $code;
+    protected ?string $code = null;
 
     /**
      * A short, human-readable summary of the problem that SHOULD NOT change from
      * occurrence to occurrence of the problem, except for purposes of localization.
-     *
-     * @var string
      */
-    protected $title;
+    protected ?string $title = null;
 
     /**
      * A human-readable explanation specific to this occurrence of the problem.
-     * Like title, this field’s value can be localized.
-     *
-     * @var string
+     * Like title, this field's value can be localized.
      */
-    protected $detail;
+    protected ?string $detail = null;
 
     /**
      * An object containing references to the source of the error.
-     *
-     * @var \SMartins\Exceptions\JsonApi\Source
      */
-    protected $source;
+    protected ?Source $source = null;
 
     /**
      * Get a unique identifier for this particular occurrence of the problem.
-     *
-     * @return string
      */
-    public function getId()
+    public function getId(): ?string
     {
         return $this->id;
     }
 
     /**
      * Set a unique identifier for this particular occurrence of the problem.
-     *
-     * @param string $id
-     *
-     * @return self
      */
-    public function setId(string $id): self
+    public function setId(string $id): static
     {
         $this->id = $id;
 
@@ -86,44 +70,31 @@ class Error implements Arrayable, ErrorHandledInterface
 
     /**
      * Get the value of links.
-     *
-     * @return \SMartins\Exceptions\JsonApi\Links
      */
-    public function getLinks()
+    public function getLinks(): ?Links
     {
         return $this->links;
     }
 
     /**
      * Set the value of links.
-     *
-     * @param \SMartins\Exceptions\JsonApi\Links  $links
-     *
-     * @return self
      */
-    public function setLinks(Links $links): self
+    public function setLinks(Links $links): static
     {
         $this->links = $links;
 
         return $this;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getStatus(): string
     {
-        return $this->status;
+        return $this->status ?? '';
     }
 
     /**
      * Set the HTTP status code applicable to this problem, expressed as a string value.
-     *
-     * @param string $status
-     *
-     * @return self
      */
-    public function setStatus(string $status): self
+    public function setStatus(string $status): static
     {
         $this->status = $status;
 
@@ -132,22 +103,16 @@ class Error implements Arrayable, ErrorHandledInterface
 
     /**
      * Get an application-specific error code, expressed as a string value.
-     *
-     * @return string
      */
-    public function getCode()
+    public function getCode(): ?string
     {
         return $this->code;
     }
 
     /**
      * Set an application-specific error code, expressed as a string value.
-     *
-     * @param string $code
-     *
-     * @return self
      */
-    public function setCode(string $code): self
+    public function setCode(string $code): static
     {
         $this->code = $code;
 
@@ -156,22 +121,16 @@ class Error implements Arrayable, ErrorHandledInterface
 
     /**
      * Get occurrence to occurrence of the problem, except for purposes of localization.
-     *
-     * @return string
      */
     public function getTitle(): string
     {
-        return $this->title;
+        return $this->title ?? '';
     }
 
     /**
      * Set occurrence to occurrence of the problem, except for purposes of localization.
-     *
-     * @param string $title
-     *
-     * @return self
      */
-    public function setTitle(string $title): self
+    public function setTitle(string $title): static
     {
         $this->title = $title;
 
@@ -179,23 +138,17 @@ class Error implements Arrayable, ErrorHandledInterface
     }
 
     /**
-     * Get like title, this field’s value can be localized.
-     *
-     * @return string
+     * Get like title, this field's value can be localized.
      */
-    public function getDetail()
+    public function getDetail(): ?string
     {
         return $this->detail;
     }
 
     /**
-     * Set like title, this field’s value can be localized.
-     *
-     * @param string $detail
-     *
-     * @return self
+     * Set like title, this field's value can be localized.
      */
-    public function setDetail(string $detail): self
+    public function setDetail(string $detail): static
     {
         $this->detail = $detail;
 
@@ -204,31 +157,22 @@ class Error implements Arrayable, ErrorHandledInterface
 
     /**
      * Get an object containing references to the source of the error.
-     *
-     * @return \SMartins\Exceptions\JsonApi\Source
      */
-    public function getSource()
+    public function getSource(): ?Source
     {
         return $this->source;
     }
 
     /**
      * Set an object containing references to the source of the error.
-     *
-     * @param \SMartins\Exceptions\JsonApi\Source  $source
-     *
-     * @return self
      */
-    public function setSource(Source $source): self
+    public function setSource(Source $source): static
     {
         $this->source = $source;
 
         return $this;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function toCollection(): ErrorHandledCollectionInterface
     {
         return new ErrorCollection([$this]);

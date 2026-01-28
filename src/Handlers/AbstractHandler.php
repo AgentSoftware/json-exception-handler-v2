@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace SMartins\Exceptions\Handlers;
 
-use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -10,36 +11,36 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 use SMartins\Exceptions\JsonApi\Response as JsonApiResponse;
+use SMartins\Exceptions\Response\AbstractResponse;
 use SMartins\Exceptions\Response\ErrorHandledCollectionInterface;
 use SMartins\Exceptions\Response\ErrorHandledInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Throwable;
 
 abstract class AbstractHandler
 {
     /**
      * The exception thrown.
-     *
-     * @var \Exception
      */
-    protected $exception;
+    protected Throwable $exception;
 
     /**
      * An array where the key is the class exception and the value is the handler
      * class that will treat the exception.
      *
-     * @var array
+     * @var array<class-string, class-string>
      */
-    protected $exceptionHandlers = [];
+    protected array $exceptionHandlers = [];
 
     /**
      * An internal array where the key is the exception class and the value is
      * the handler class that will treat the exception.
      *
-     * @var array
+     * @var array<class-string, class-string>
      */
-    protected $internalExceptionHandlers = [
-        Exception::class => Handler::class,
+    protected array $internalExceptionHandlers = [
+        Throwable::class => Handler::class,
         ModelNotFoundException::class => ModelNotFoundHandler::class,
         AuthenticationException::class => AuthenticationHandler::class,
         ValidationException::class => ValidationHandler::class,
@@ -51,11 +52,9 @@ abstract class AbstractHandler
     ];
 
     /**
-     * Create instance using the Exception to be handled.
-     *
-     * @param Exception $e
+     * Create instance using the Throwable to be handled.
      */
-    public function __construct(Exception $e)
+    public function __construct(Throwable $e)
     {
         $this->exception = $e;
     }
@@ -63,20 +62,16 @@ abstract class AbstractHandler
     /**
      * Handle with an exception according to specific definitions. Returns one
      * or more errors using the exception from $exceptions attribute.
-     *
-     * @return ErrorHandledInterface|ErrorHandledCollectionInterface
      */
-    abstract public function handle();
+    abstract public function handle(): ErrorHandledInterface|ErrorHandledCollectionInterface;
 
     /**
      * Get error code. If code is empty from config file based on type.
-     *
-     * @param  string $type Code type from config file
-     * @return int
      */
-    public function getCode($type = 'default')
+    public function getCode(string $type = 'default'): int|string
     {
-        if (empty($code = $this->exception->getCode())) {
+        $code = $this->exception->getCode();
+        if (empty($code)) {
             return config('json-exception-handler.codes.'.$type);
         }
 
@@ -86,10 +81,9 @@ abstract class AbstractHandler
     /**
      * Return response with handled exception.
      *
-     * @return \SMartins\Exceptions\Response\AbstractResponse
      * @throws \SMartins\Exceptions\Response\InvalidContentException
      */
-    public function handleException()
+    public function handleException(): AbstractResponse
     {
         $handler = $this->getExceptionHandler();
 
@@ -103,64 +97,55 @@ abstract class AbstractHandler
     /**
      * Validate response from handle method of handler class.
      *
-     * @param ErrorHandledInterface|ErrorHandledCollectionInterface
-     * @return ErrorHandledCollectionInterface
-     *
      * @throws \SMartins\Exceptions\Response\InvalidContentException
      */
-    public function validatedHandledException($error)
+    public function validatedHandledException(ErrorHandledInterface|ErrorHandledCollectionInterface $error): ErrorHandledCollectionInterface
     {
         if ($error instanceof ErrorHandledCollectionInterface) {
             return $error->validatedContent(ErrorHandledInterface::class);
-        } elseif ($error instanceof ErrorHandledInterface) {
-            return $error->toCollection()->setStatusCode($error->getStatus());
         }
 
-        throw new InvalidArgumentException('The errors must be an instance of ['.ErrorHandledInterface::class.'] or ['.ErrorHandledCollectionInterface::class.'].');
+        return $error->toCollection()->setStatusCode($error->getStatus());
     }
 
     /**
      * Get the class the will handle the Exception from exceptionHandlers attributes.
-     *
-     * @return mixed
      */
-    public function getExceptionHandler()
+    public function getExceptionHandler(): self
     {
         $handlers = $this->getConfiguredHandlers();
 
-        $handler = isset($handlers[get_class($this->exception)])
-            ? $handlers[get_class($this->exception)]
-            : $this->getDefaultHandler();
+        $handler = $handlers[get_class($this->exception)] ?? $this->getDefaultHandler();
 
-        return new $handler($this->exception);
+        if (is_string($handler)) {
+            return new $handler($this->exception);
+        }
+
+        return $handler;
     }
 
     /**
      * Get exception handlers from internal and set on App\Exceptions\Handler.php.
      *
-     * @return array
+     * @return array<class-string, class-string>
      */
-    public function getConfiguredHandlers()
+    public function getConfiguredHandlers(): array
     {
         return array_merge($this->internalExceptionHandlers, $this->exceptionHandlers);
     }
 
     /**
      * Get default pointer using file and line of exception.
-     *
-     * @return string
      */
-    public function getDefaultPointer()
+    public function getDefaultPointer(): string
     {
         return '';
     }
 
     /**
      * Get default title from exception.
-     *
-     * @return string
      */
-    public function getDefaultTitle()
+    public function getDefaultTitle(): string
     {
         return Str::snake(class_basename($this->exception));
     }
@@ -168,10 +153,8 @@ abstract class AbstractHandler
     /**
      * Get default http code. Check if exception has getStatusCode() methods.
      * If not get from config file.
-     *
-     * @return int
      */
-    public function getStatusCode()
+    public function getStatusCode(): int
     {
         if (method_exists($this->exception, 'getStatusCode')) {
             return $this->exception->getStatusCode();
@@ -182,10 +165,8 @@ abstract class AbstractHandler
 
     /**
      * The default handler to handle not treated exceptions.
-     *
-     * @return \SMartins\Exceptions\Handlers\Handler
      */
-    public function getDefaultHandler()
+    public function getDefaultHandler(): self
     {
         return new Handler($this->exception);
     }
@@ -194,9 +175,9 @@ abstract class AbstractHandler
      * Get default response handler of the if any response handler was defined
      * on config file.
      *
-     * @return string
+     * @return class-string<AbstractResponse>
      */
-    public function getDefaultResponseHandler()
+    public function getDefaultResponseHandler(): string
     {
         return JsonApiResponse::class;
     }
@@ -204,11 +185,9 @@ abstract class AbstractHandler
     /**
      * Get the response class that will handle the json response.
      *
-     * @todo Check if the response_handler on config is an instance of
-     *       \SMartins\Exceptions\Response\AbstractResponse
-     * @return string
+     * @return class-string<AbstractResponse>
      */
-    public function getResponseHandler()
+    public function getResponseHandler(): string
     {
         $response = config('json-exception-handler.response_handler');
 
@@ -218,10 +197,9 @@ abstract class AbstractHandler
     /**
      * Set exception handlers.
      *
-     * @param array $handlers
-     * @return AbstractHandler
+     * @param  array<class-string, class-string>  $handlers
      */
-    public function setExceptionHandlers(array $handlers)
+    public function setExceptionHandlers(array $handlers): static
     {
         $this->exceptionHandlers = $handlers;
 
