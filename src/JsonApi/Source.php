@@ -1,10 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace SMartins\Exceptions\JsonApi;
 
 use Illuminate\Contracts\Support\Arrayable;
 use SMartins\Exceptions\Traits\NotNullArrayable;
 
+/**
+ * @implements Arrayable<string, mixed>
+ */
 class Source implements Arrayable
 {
     use NotNullArrayable;
@@ -13,36 +18,26 @@ class Source implements Arrayable
      * A JSON Pointer [RFC6901] to the associated entity in the request document
      * [e.g. "/data" for a primary data object, or "/data/attributes/title" for
      * a specific attribute].
-     *
-     * @var string
      */
-    protected $pointer;
+    protected ?string $pointer = null;
 
     /**
      * A string indicating which URI query parameter caused the error.
-     *
-     * @var string
      */
-    protected $parameter;
+    protected ?string $parameter = null;
 
     /**
      * Get pointer.
-     *
-     * @return  string
      */
-    public function getPointer()
+    public function getPointer(): ?string
     {
         return $this->pointer;
     }
 
     /**
      * Set pointer.
-     *
-     * @param  string  $pointer
-     *
-     * @return  self
      */
-    public function setPointer(string $pointer)
+    public function setPointer(string $pointer): static
     {
         $this->pointer = $pointer;
 
@@ -51,22 +46,16 @@ class Source implements Arrayable
 
     /**
      * Get parameter.
-     *
-     * @return  string
      */
-    public function getParameter()
+    public function getParameter(): ?string
     {
         return $this->parameter;
     }
 
     /**
      * Set parameter.
-     *
-     * @param  string  $parameter
-     *
-     * @return  self
      */
-    public function setParameter(string $parameter)
+    public function setParameter(string $parameter): static
     {
         $this->parameter = $parameter;
 

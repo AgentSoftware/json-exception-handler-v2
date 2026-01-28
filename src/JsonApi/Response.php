@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace SMartins\Exceptions\JsonApi;
 
 use Illuminate\Http\JsonResponse;
@@ -9,8 +11,6 @@ class Response extends AbstractResponse
 {
     /**
      * Returns JSON response.
-     *
-     * @return \Illuminate\Http\JsonResponse
      */
     public function json(): JsonResponse
     {

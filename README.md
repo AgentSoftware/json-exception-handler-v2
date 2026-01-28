@@ -1,20 +1,20 @@
 # Laravel Json Exception Handler
 
-[![StyleCI](https://styleci.io/repos/101529653/shield?style=plastic&branch=2.0)](https://styleci.io/repos/101529653?style=plastic&branch=2.0)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/sfelix-martins/json-exception-handler/badges/quality-score.png?b=2.0)](https://scrutinizer-ci.com/g/sfelix-martins/json-exception-handler/?branch=2.0)
-[![Build Status](https://travis-ci.org/sfelix-martins/json-exception-handler.svg?branch=2.0)](https://travis-ci.org/sfelix-martins/json-exception-handler)
+[![StyleCI](https://styleci.io/repos/101529653/shield?style=plastic&branch=3.0)](https://styleci.io/repos/101529653?style=plastic&branch=3.0)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/sfelix-martins/json-exception-handler/badges/quality-score.png?b=3.0)](https://scrutinizer-ci.com/g/sfelix-martins/json-exception-handler/?branch=3.0)
+[![Tests](https://github.com/sfelix-martins/json-exception-handler/actions/workflows/tests.yml/badge.svg)](https://github.com/sfelix-martins/json-exception-handler/actions/workflows/tests.yml)
 
 Adds methods to your `App\Exceptions\Handler` to treat json responses.
 It is most useful if you are building APIs!
 
 ## Requirements
 
-* Laravel Framework >= 5.4
-* php >= 7.0
+* PHP >= 8.1
+* Laravel Framework 10.x, 11.x, or 12.x
 
 ## JsonAPI
 
-Using [JsonAPI](http://jsonapi.org) standard to  responses!
+Using [JsonAPI](http://jsonapi.org) standard to responses!
 
 ## Features
 
@@ -76,26 +76,18 @@ To `Illuminate\Validation\ValidationException`:
 
 ## Installing and configuring
 
-Install the package 
+Install the package
 
 ```console
 $ composer require sfelix-martins/json-exception-handler
 ```
 
-If you are not using **Laravel 5.5** version add the `JsonHandlerServiceProvider` to your `config/app.php` providers array:
-
-```php
-    'providers' => [
-        ...
-        SMartins\Exceptions\JsonHandlerServiceProvider::class,
-    ],
-```
+The package uses Laravel's auto-discovery feature, so the service provider will be automatically registered.
 
 Publish the config to set your own exception codes
 
 ```sh
-
-$ php artisan vendor:publish --provider="SMartins\JsonHandler\JsonHandlerServiceProvider"
+$ php artisan vendor:publish --provider="SMartins\Exceptions\JsonHandlerServiceProvider"
 ```
 
 Set your exception codes on `config/json-exception-handler.php` on codes array.
@@ -115,12 +107,12 @@ In `resources/lang/vendor/exception/lang/$locale` in `exceptions` file you can s
 
 ## Using
 
-Use the trait on your `App\Exception\Handler` and add method `jsonResponse()` 
-passing the `$exception` if `$request` expects a json response on `render()`method
+Use the trait on your `App\Exception\Handler` and add method `jsonResponse()`
+passing the `$exception` if `$request` expects a json response on `render()` method
 
 ```php
-
 use SMartins\Exceptions\JsonHandler;
+use Throwable;
 
 class Handler extends ExceptionHandler
 {
@@ -128,15 +120,15 @@ class Handler extends ExceptionHandler
 
     // ...
 
-    public function render($request, Exception $exception)
-    {   
+    public function render($request, Throwable $e)
+    {
         if ($request->expectsJson()) {
-            return $this->jsonResponse($exception);
+            return $this->jsonResponse($e);
         }
 
-        return parent::render($request, $exception);
+        return parent::render($request, $e);
     }
-    
+
     // ...
 ```
 
@@ -173,7 +165,7 @@ class UserController extends Controller
     {
         // If not found the default response is called
         $user = User::findOrFail($id);
-        
+
         // Gate define on AuthServiceProvider
         // Generate an AuthorizationException if fail
         $this->authorize('users.view', $user->id);
@@ -183,54 +175,37 @@ class UserController extends Controller
 
 ## Extending
 
-You can too create your own handler to any Exception. E.g.:
+You can create your own handler for any Exception. E.g.:
 
-- Create a Handler class that extends of `AbstractHandler`:
+- Create a Handler class that extends `AbstractHandler`:
 
 ```php
 namespace App\Exceptions;
 
 use GuzzleHttp\Exception\ClientException;
 use SMartins\Exceptions\Handlers\AbstractHandler;
+use SMartins\Exceptions\JsonApi\Error;
+use SMartins\Exceptions\JsonApi\Source;
+use SMartins\Exceptions\Response\ErrorHandledCollectionInterface;
+use SMartins\Exceptions\Response\ErrorHandledInterface;
 
 class GuzzleClientHandler extends AbstractHandler
 {
-    /**
-     * Create instance using the Exception to be handled.
-     *
-     * @param \GuzzleHttp\Exception\ClientException $e
-     */
     public function __construct(ClientException $e)
     {
         parent::__construct($e);
     }
-}
-```
 
-- You must implements the method `handle()` from `AbstractHandler` class. The method must return an instance of `Error` or `ErrorCollection`:
-
-```php
-namespace App\Exceptions;
-
-use SMartins\Exceptions\JsonAPI\Error;
-use SMartins\Exceptions\JsonAPI\Source;
-use GuzzleHttp\Exception\ClientException;
-use SMartins\Exceptions\Handlers\AbstractHandler;
-
-class GuzzleClientHandler extends AbstractHandler
-{
-    // ...
-
-    public function handle()
+    public function handle(): ErrorHandledInterface|ErrorHandledCollectionInterface
     {
-        return (new Error)->setStatus($this->getStatusCode())
-            ->setCode($this->getCode())
+        return (new Error)->setStatus((string) $this->getStatusCode())
+            ->setCode((string) $this->getCode())
             ->setSource((new Source())->setPointer($this->getDefaultPointer()))
             ->setTitle($this->getDefaultTitle())
             ->setDetail($this->exception->getMessage());
     }
 
-    public function getCode()
+    public function getCode(string $type = 'default'): int|string
     {
         // You can add a new type of code on `config/json-exception-handlers.php`
         return config('json-exception-handler.codes.client.default');
@@ -238,13 +213,17 @@ class GuzzleClientHandler extends AbstractHandler
 }
 ```
 
+- For returning multiple errors:
+
 ```php
 namespace App\Exceptions;
 
-use SMartins\Exceptions\JsonAPI\Error;
-use SMartins\Exceptions\JsonAPI\Source;
-use SMartins\Exceptions\JsonAPI\ErrorCollection;
+use SMartins\Exceptions\JsonApi\Error;
+use SMartins\Exceptions\JsonApi\Source;
+use SMartins\Exceptions\JsonApi\ErrorCollection;
 use SMartins\Exceptions\Handlers\AbstractHandler;
+use SMartins\Exceptions\Response\ErrorHandledCollectionInterface;
+use SMartins\Exceptions\Response\ErrorHandledInterface;
 
 class MyCustomizedHandler extends AbstractHandler
 {
@@ -253,14 +232,14 @@ class MyCustomizedHandler extends AbstractHandler
         parent::__construct($e);
     }
 
-    public function handle()
+    public function handle(): ErrorHandledInterface|ErrorHandledCollectionInterface
     {
-        $errors = (new ErrorCollection)->setStatusCode(400);
+        $errors = (new ErrorCollection)->setStatusCode('400');
 
         $exceptions = $this->exception->getExceptions();
 
         foreach ($exceptions as $exception) {
-            $error = (new Error)->setStatus(422)
+            $error = (new Error)->setStatus('422')
                 ->setSource((new Source())->setPointer($this->getDefaultPointer()))
                 ->setTitle($this->getDefaultTitle())
                 ->setDetail($exception->getMessage());
@@ -273,15 +252,15 @@ class MyCustomizedHandler extends AbstractHandler
 }
 ```
 
-- Now just registry your customized handler on `App\Exception\Handler` file on attribute `exceptionHandlers`. E.g:
+- Now just register your customized handler on `App\Exception\Handler` file on attribute `exceptionHandlers`. E.g:
 
 ```php
 namespace App\Exceptions;
 
-use Exception;
 use GuzzleHttp\Exception\ClientException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use SMartins\Exceptions\JsonHandler;
+use Throwable;
 
 class Handler extends ExceptionHandler
 {
@@ -291,8 +270,17 @@ class Handler extends ExceptionHandler
         // Set on key the exception and on value the handler.
         ClientException::class => GuzzleClientHandler::class,
     ];
-
 ```
+
+## Upgrading from 2.x
+
+If you're upgrading from version 2.x, note the following changes:
+
+1. PHP 8.1+ is now required
+2. Laravel 10, 11, or 12 is required
+3. The `render()` method signature now uses `Throwable` instead of `Exception`
+4. All handler classes now use strict types and proper return type declarations
+5. Status codes are now always strings in the JSON response (as per JsonAPI spec)
 
 ## Response References:
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace SMartins\Exceptions\Response;
 
 use Illuminate\Http\JsonResponse;
@@ -8,22 +10,16 @@ abstract class AbstractResponse
 {
     /**
      * The HTTP status code.
-     *
-     * @var int
      */
-    protected $status;
+    protected int $status;
 
     /**
      * The errors on response.
-     *
-     * @var \SMartins\Exceptions\Response\ErrorHandledCollectionInterface
      */
-    protected $errors;
+    protected ErrorHandledCollectionInterface $errors;
 
     /**
      * Create new Response response passing the errors.
-     *
-     * @param \SMartins\Exceptions\Response\ErrorHandledCollectionInterface $errors
      */
     public function __construct(ErrorHandledCollectionInterface $errors)
     {
@@ -34,22 +30,16 @@ abstract class AbstractResponse
 
     /**
      * Get the HTTP status code.
-     *
-     * @return  int
      */
-    public function getStatus()
+    public function getStatus(): int
     {
         return $this->status;
     }
 
     /**
      * Set the HTTP status code.
-     *
-     * @param  int  $status  The HTTP status code.
-     *
-     * @return  self
      */
-    public function setStatus(int $status)
+    public function setStatus(int $status): static
     {
         $this->status = $status;
 
@@ -58,18 +48,14 @@ abstract class AbstractResponse
 
     /**
      * Get the errors on response.
-     *
-     * @return \SMartins\Exceptions\Response\ErrorHandledCollectionInterface
      */
-    public function getErrors()
+    public function getErrors(): ErrorHandledCollectionInterface
     {
         return $this->errors;
     }
 
     /**
      * Returns JSON response.
-     *
-     * @return \Illuminate\Http\JsonResponse
      */
     abstract public function json(): JsonResponse;
 }

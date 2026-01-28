@@ -1,14 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace SMartins\Exceptions\Tests\Fixtures\Exceptions;
 
-use Exception;
-use SMartins\Exceptions\JsonHandler;
 use Illuminate\Auth\Access\AuthorizationException;
-use SMartins\Exceptions\Handlers\NotFoundHttpHandler;
-use SMartins\Exceptions\Handlers\AuthorizationHandler;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\Request;
+use SMartins\Exceptions\Handlers\AuthorizationHandler;
+use SMartins\Exceptions\Handlers\NotFoundHttpHandler;
+use SMartins\Exceptions\JsonHandler;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Throwable;
 
 class Handler extends ExceptionHandler
 {
@@ -18,7 +22,7 @@ class Handler extends ExceptionHandler
      * An array where the key is the class exception and the value is the handler
      * class that will treat the exception.
      *
-     * @var array
+     * @var array<class-string, class-string>
      */
     protected $exceptionHandlers = [
         AuthorizationException::class => AuthorizationHandler::class,
@@ -28,7 +32,7 @@ class Handler extends ExceptionHandler
     /**
      * A list of the exception types that are not reported.
      *
-     * @var array
+     * @var array<int, class-string<Throwable>>
      */
     protected $dontReport = [
         //
@@ -37,7 +41,7 @@ class Handler extends ExceptionHandler
     /**
      * A list of the inputs that are never flashed for validation exceptions.
      *
-     * @var array
+     * @var array<int, string>
      */
     protected $dontFlash = [
         'password',
@@ -46,28 +50,21 @@ class Handler extends ExceptionHandler
 
     /**
      * Report or log an exception.
-     *
-     * @param  \Exception  $exception
-     * @return void
      */
-    public function report(Exception $exception)
+    public function report(Throwable $e): void
     {
-        parent::report($exception);
+        parent::report($e);
     }
 
     /**
      * Render an exception into an HTTP response.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Exception  $exception
-     * @return \Illuminate\Http\Response
      */
-    public function render($request, Exception $exception)
+    public function render($request, Throwable $e): Response
     {
         if ($request->expectsJson()) {
-            return $this->jsonResponse($exception);
+            return $this->jsonResponse($e);
         }
 
-        return parent::render($request, $exception);
+        return parent::render($request, $e);
     }
 }

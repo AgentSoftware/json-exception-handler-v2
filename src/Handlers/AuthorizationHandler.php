@@ -1,21 +1,34 @@
 <?php
 
+declare(strict_types=1);
+
 namespace SMartins\Exceptions\Handlers;
 
+use Illuminate\Auth\Access\AuthorizationException;
 use SMartins\Exceptions\JsonApi\Error;
 use SMartins\Exceptions\JsonApi\Source;
+use SMartins\Exceptions\Response\ErrorHandledCollectionInterface;
+use SMartins\Exceptions\Response\ErrorHandledInterface;
+use Throwable;
 
 class AuthorizationHandler extends AbstractHandler
 {
     /**
-     * {@inheritdoc}
+     * @var AuthorizationException
      */
-    public function handle()
+    protected Throwable $exception;
+
+    public function __construct(AuthorizationException $e)
     {
-        return (new Error)->setStatus(403)
-            ->setCode($this->getCode('authorization'))
+        parent::__construct($e);
+    }
+
+    public function handle(): ErrorHandledInterface|ErrorHandledCollectionInterface
+    {
+        return (new Error)->setStatus('403')
+            ->setCode((string) $this->getCode('authorization'))
             ->setSource((new Source())->setPointer($this->getDefaultPointer()))
-            ->setTitle(__('exception::exceptions.authorization.title'))
+            ->setTitle((string) __('exception::exceptions.authorization.title'))
             ->setDetail($this->exception->getMessage());
     }
 }

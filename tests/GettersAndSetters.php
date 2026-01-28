@@ -1,16 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace SMartins\Exceptions\Tests;
 
-use ReflectionClass;
 use InvalidArgumentException;
+use ReflectionClass;
 
 trait GettersAndSetters
 {
     /**
      * @throws \ReflectionException
      */
-    public function testGettersAndSetters()
+    public function testGettersAndSetters(): void
     {
         if (! property_exists($this, 'classToTest')) {
             throw new InvalidArgumentException('Please define the property $classToTest.');

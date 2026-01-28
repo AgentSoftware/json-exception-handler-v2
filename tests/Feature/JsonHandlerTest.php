@@ -1,19 +1,22 @@
 <?php
 
+declare(strict_types=1);
+
 namespace SMartins\Exceptions\Tests\Feature;
 
 use Exception;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use SMartins\Exceptions\Tests\TestCase;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Auth\Access\AuthorizationException;
+use PHPUnit\Framework\Attributes\Test;
 use SMartins\Exceptions\Tests\Fixtures\User as Model;
+use SMartins\Exceptions\Tests\TestCase;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class JsonHandlerTest extends TestCase
 {
-    public function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -22,7 +25,7 @@ class JsonHandlerTest extends TestCase
         $this->setUpRoutes();
     }
 
-    public function setUpRoutes()
+    public function setUpRoutes(): void
     {
         Route::get('default_exception', function (Request $request) {
             throw new Exception('Test message', 1);
@@ -52,35 +55,40 @@ class JsonHandlerTest extends TestCase
         });
     }
 
-    public function testThrowsDefaultException()
+    #[Test]
+    public function testThrowsDefaultException(): void
     {
         $this->json('GET', 'default_exception')
             ->assertStatus(500)
             ->assertJsonStructure($this->defaultErrorStructure());
     }
 
-    public function testThrowsModelNotFoundException()
+    #[Test]
+    public function testThrowsModelNotFoundException(): void
     {
         $this->json('GET', 'model_not_found')
             ->assertStatus(404)
             ->assertJsonStructure($this->defaultErrorStructure());
     }
 
-    public function testThrowsAuthenticationException()
+    #[Test]
+    public function testThrowsAuthenticationException(): void
     {
         $this->json('GET', 'authentication')
             ->assertStatus(401)
             ->assertJsonStructure($this->defaultErrorStructure());
     }
 
-    public function testThrowsAuthorizationException()
+    #[Test]
+    public function testThrowsAuthorizationException(): void
     {
         $this->json('GET', 'authorization')
             ->assertStatus(403)
             ->assertJsonStructure($this->defaultErrorStructure());
     }
 
-    public function testThrowsValidationExceptions()
+    #[Test]
+    public function testThrowsValidationExceptions(): void
     {
         $params = ['email' => str_repeat('a', 11)];
 
@@ -89,14 +97,16 @@ class JsonHandlerTest extends TestCase
             ->assertJsonStructure($this->defaultErrorStructure());
     }
 
-    public function testThrowsBadRequestHttpException()
+    #[Test]
+    public function testThrowsBadRequestHttpException(): void
     {
         $this->json('GET', 'bad_request')
             ->assertStatus(400)
             ->assertJsonStructure($this->defaultErrorStructure());
     }
 
-    public function testThrowsNotFoundHttpException()
+    #[Test]
+    public function testThrowsNotFoundHttpException(): void
     {
         $this->json('GET', 'not_found_route')
             ->assertStatus(404)
@@ -106,9 +116,9 @@ class JsonHandlerTest extends TestCase
     /**
      * The default json response error structure.
      *
-     * @return array
+     * @return array<string, array<int, array<string, array<int, string>|string>>>
      */
-    public function defaultErrorStructure()
+    public function defaultErrorStructure(): array
     {
         return [
             'errors' => [[
@@ -116,7 +126,7 @@ class JsonHandlerTest extends TestCase
                 'code',
                 'title',
                 'detail',
-                'source' => ['pointer']
+                'source' => ['pointer'],
             ]],
         ];
     }

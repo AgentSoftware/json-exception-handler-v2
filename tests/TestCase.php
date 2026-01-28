@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace SMartins\Exceptions\Tests;
 
 use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase as BaseTestCase;
 use SMartins\Exceptions\JsonHandlerServiceProvider;
 use SMartins\Exceptions\Tests\Fixtures\Exceptions\Handler;
@@ -12,10 +15,9 @@ abstract class TestCase extends BaseTestCase
     /**
      * Define environment setup.
      *
-     * @param  \Illuminate\Foundation\Application  $app
-     * @return void
+     * @param  Application  $app
      */
-    protected function getEnvironmentSetUp($app)
+    protected function getEnvironmentSetUp($app): void
     {
         $app->singleton(
             ExceptionHandler::class,
@@ -25,12 +27,16 @@ abstract class TestCase extends BaseTestCase
         // Setup default database to use sqlite :memory:
         $app['config']->set('database.default', 'exceptions');
         $app['config']->set('database.connections.exceptions', [
-            'driver'   => 'sqlite',
+            'driver' => 'sqlite',
             'database' => ':memory:',
         ]);
     }
 
-    protected function getPackageProviders($app)
+    /**
+     * @param  Application  $app
+     * @return array<int, class-string>
+     */
+    protected function getPackageProviders($app): array
     {
         return [
             JsonHandlerServiceProvider::class,
