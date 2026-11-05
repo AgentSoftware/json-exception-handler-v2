@@ -30,6 +30,14 @@ jobs:
 
     name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
 
+    # Composer 2.9+ refuses to install versions with open advisories. Every
+    # Laravel 10.x/11.x release now has one (both are past security EOL), so
+    # without this the L10/L11 legs can't resolve at all. We still want to test
+    # the range composer.json claims to support; the composer-audit job is the
+    # security gate.
+    env:
+      COMPOSER_NO_SECURITY_BLOCKING: "1"
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
