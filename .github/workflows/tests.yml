@@ -30,6 +30,14 @@ jobs:
 
     name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
 
+    # Composer 2.9+ refuses to install versions with open advisories. Every
+    # Laravel 10.x/11.x release now has one (both are past security EOL), so
+    # without this the L10/L11 legs can't resolve at all. We still want to test
+    # the range composer.json claims to support; the composer-audit job is the
+    # security gate.
+    env:
+      COMPOSER_NO_SECURITY_BLOCKING: "1"
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -48,3 +56,40 @@ jobs:
 
       - name: Execute tests
         run: vendor/bin/phpunit
+
+  # Same intent as street-orb/spectre-orb's composer_audit, adapted for a
+  # library. The committed composer.lock is stale (Laravel 5.6) and CI never
+  # installs from it, so resolve the tree first, as the test job does.
+  # COMPOSER_NO_SECURITY_BLOCKING stops Composer 2.9+ silently skipping
+  # vulnerable versions during update, so the audit sees what the composer.json
+  # constraints actually allow.
+  composer-audit:
+    runs-on: ubuntu-latest
+    name: composer-audit
+
+    env:
+      COMPOSER_NO_SECURITY_BLOCKING: "1"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.3
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite
+          coverage: none
+
+      # Report-only: shows advisories reachable at the lowest versions our
+      # runtime constraints allow. Mostly transitive, so it never fails the build.
+      - name: Composer audit (prefer-lowest, report only)
+        run: |
+          composer update --prefer-lowest --no-dev --prefer-dist --no-interaction --no-audit --no-scripts
+          composer audit --no-dev --abandoned=report || echo "::warning::Advisories reachable at lowest constraints (report only)"
+
+      # Gate: what a consumer gets on a fresh install today.
+      - name: Composer audit
+        run: |
+          composer update --prefer-stable --prefer-dist --no-interaction --no-audit --no-scripts
+          composer audit --abandoned=report
